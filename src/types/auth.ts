@@ -1,10 +1,7 @@
 export interface User {
   id: string;
-  fullName: string;
-  company: string;
-  position: string;
-  inn?: string;
   phone: string;
+  name: string;
   email?: string;
   isVerified: boolean;
 }

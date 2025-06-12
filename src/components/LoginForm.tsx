@@ -1,111 +1,74 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { useAuthContext } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/hooks/useAuth";
-import { validatePhone, formatPhone } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
-
-const loginSchema = z.object({
-  phone: z.string().refine(validatePhone, "Неверный формат телефона"),
-  password: z.string().min(1, "Пароль обязателен"),
-});
+import { toast } from "sonner";
 
 interface LoginFormProps {
   onRegisterClick: () => void;
 }
 
-export default function LoginForm({ onRegisterClick }: LoginFormProps) {
+const LoginForm = ({ onRegisterClick }: LoginFormProps) => {
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
-  const { toast } = useToast();
+  const { login } = useAuthContext();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(loginSchema),
-  });
-
-  const onSubmit = async (data: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
-    try {
-      const formattedPhone = formatPhone(data.phone);
-      const success = await login(formattedPhone, data.password);
 
+    try {
+      const success = await login(phone, password);
       if (success) {
-        toast({
-          title: "Добро пожаловать!",
-          description: "Вы успешно вошли в систему",
-        });
+        toast.success("Успешный вход!");
       } else {
-        toast({
-          title: "Ошибка входа",
-          description: "Неверный телефон, пароль или аккаунт не подтвержден",
-          variant: "destructive",
-        });
+        toast.error("Неверный телефон или пароль");
       }
+    } catch (error) {
+      toast.error("Ошибка входа");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto animate-fade-in">
-      <CardHeader>
-        <CardTitle className="text-2xl text-center">Вход в систему</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Label htmlFor="phone">Телефон</Label>
-            <Input
-              id="phone"
-              {...register("phone")}
-              placeholder="+7 (999) 123-45-67"
-            />
-            {errors.phone && (
-              <p className="text-sm text-destructive mt-1">
-                {errors.phone.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="password">Пароль</Label>
-            <Input
-              id="password"
-              type="password"
-              {...register("password")}
-              placeholder="Введите пароль"
-            />
-            {errors.password && (
-              <p className="text-sm text-destructive mt-1">
-                {errors.password.message}
-              </p>
-            )}
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full bg-accent hover:bg-accent/90"
-            disabled={isLoading}
-          >
-            {isLoading ? "Вход..." : "Войти"}
-          </Button>
-
-          <div className="text-center">
-            <Button variant="link" onClick={onRegisterClick}>
-              Нет аккаунта? Зарегистрироваться
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+    <div className="bg-white p-8 rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-6 text-center">Вход</h2>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-4">
+          <Input
+            type="tel"
+            placeholder="Номер телефона"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            required
+          />
+        </div>
+        <div className="mb-6">
+          <Input
+            type="password"
+            placeholder="Пароль"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <Button type="submit" className="w-full mb-4" disabled={isLoading}>
+          {isLoading ? "Вход..." : "Войти"}
+        </Button>
+      </form>
+      <p className="text-center">
+        Нет аккаунта?{" "}
+        <button
+          onClick={onRegisterClick}
+          className="text-blue-600 hover:underline"
+        >
+          Зарегистрироваться
+        </button>
+      </p>
+    </div>
   );
-}
+};
+
+export default LoginForm;
