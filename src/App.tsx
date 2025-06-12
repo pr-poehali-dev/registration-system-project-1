@@ -52,7 +52,7 @@ const AppContent = () => {
             path="/catalog"
             element={
               <ProtectedRoute>
-                <ProductCatalog cartItems={cartItems} onAddToCart={addToCart} />
+                <ProductCatalog onAddToCart={addToCart} />
               </ProtectedRoute>
             }
           />
@@ -61,11 +61,11 @@ const AppContent = () => {
             element={
               <ProtectedRoute>
                 <ShoppingCart
-                  items={cartItems}
-                  onRemoveFromCart={removeFromCart}
+                  cartItems={cartItems}
+                  onRemove={removeFromCart}
                   onUpdateQuantity={updateQuantity}
-                  onClearCart={clearCart}
-                  onExportToExcel={exportToExcel}
+                  onClear={clearCart}
+                  onExport={exportToExcel}
                 />
               </ProtectedRoute>
             }
@@ -77,12 +77,14 @@ const AppContent = () => {
   );
 };
 
-const App = () => (
-  <Router>
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  </Router>
-);
+const App = () => {
+  return (
+    <Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Router>
+  );
+};
 
 export default App;

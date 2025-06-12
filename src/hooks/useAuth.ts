@@ -52,26 +52,29 @@ export const useAuth = () => {
   };
 
   const verifyPhone = async (code: string): Promise<boolean> => {
-    if (code === "1234") {
-      const pendingUser = JSON.parse(
-        localStorage.getItem("pendingUser") || "{}",
-      );
+    const pendingUser = JSON.parse(
+      localStorage.getItem("pendingUser") || "null",
+    );
+    if (pendingUser && code === "1234") {
       const users = JSON.parse(localStorage.getItem("users") || "[]");
-
-      const updatedUsers = users.map((u: any) =>
-        u.id === pendingUser.id ? { ...u, isVerified: true } : u,
-      );
-
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
-      localStorage.removeItem("pendingUser");
-      return true;
+      const userIndex = users.findIndex((u: any) => u.id === pendingUser.id);
+      if (userIndex !== -1) {
+        users[userIndex].isVerified = true;
+        localStorage.setItem("users", JSON.stringify(users));
+        localStorage.removeItem("pendingUser");
+        return true;
+      }
     }
     return false;
   };
 
   const logout = () => {
-    setAuthState({ user: null, isAuthenticated: false, isLoading: false });
     localStorage.removeItem("user");
+    setAuthState({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+    });
   };
 
   return {
@@ -82,5 +85,3 @@ export const useAuth = () => {
     verifyPhone,
   };
 };
-
-export default useAuth;
