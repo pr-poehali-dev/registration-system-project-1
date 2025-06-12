@@ -33,6 +33,9 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppContent = () => {
   const { authState } = useAuthContext();
+  const [currentPage, setCurrentPage] = useState<"products" | "cart">(
+    "products",
+  );
   const {
     cartItems,
     addToCart,
@@ -42,9 +45,15 @@ const AppContent = () => {
     exportToExcel,
   } = useCart(authState.user?.id);
 
+  const handlePageChange = (page: "products" | "cart") => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      {authState.isAuthenticated && (
+        <Header currentPage={currentPage} onPageChange={handlePageChange} />
+      )}
       <main className="container mx-auto px-4 py-8">
         <Routes>
           <Route path="/" element={<Index />} />
