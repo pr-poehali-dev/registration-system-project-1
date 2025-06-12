@@ -1,32 +1,88 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
-import { CartProvider } from "@/hooks/useCart";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import "./App.css";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import AuthProvider, { useAuthContext } from "@/components/AuthProvider";
+import { useCart } from "@/hooks/useCart";
+import Header from "@/components/Header";
+import Index from "@/pages/Index";
+import ProductCatalog from "@/components/ProductCatalog";
+import ShoppingCart from "@/components/ShoppingCart";
+import { Toaster } from "sonner";
 
-const queryClient = new QueryClient();
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { authState } = useAuthContext();
+
+  if (authState.isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        Загрузка...
+      </div>
+    );
+  }
+
+  return authState.isAuthenticated ? (
+    <>{children}</>
+  ) : (
+    <Navigate to="/" replace />
+  );
+};
+
+const AppContent = () => {
+  const { authState } = useAuthContext();
+  const {
+    cartItems,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    exportToExcel,
+  } = useCart(authState.user?.id);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header />
+      <main className="container mx-auto px-4 py-8">
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route
+            path="/catalog"
+            element={
+              <ProtectedRoute>
+                <ProductCatalog cartItems={cartItems} onAddToCart={addToCart} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <ShoppingCart
+                  items={cartItems}
+                  onRemoveFromCart={removeFromCart}
+                  onUpdateQuantity={updateQuantity}
+                  onClearCart={clearCart}
+                  onExportToExcel={exportToExcel}
+                />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </main>
+      <Toaster />
+    </div>
+  );
+};
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <CartProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </CartProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <Router>
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  </Router>
 );
 
 export default App;
